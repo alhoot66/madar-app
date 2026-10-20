@@ -1,1 +1,1 @@
-# madar-app
+A modern, unified school management platform designed to simplify administration, empower teachers, manage student attendance, behavior, grades, digital approvals, and reports—all in one secure and user-friendly system.

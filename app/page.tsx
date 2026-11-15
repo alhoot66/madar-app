@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export default function Home(){return <main style={{maxWidth:760,margin:'12vh auto',padding:24,textAlign:'center'}}><h1 style={{fontSize:54}}>مَدَار</h1><h2>منصة موحدة للإدارة والمعلمين في جميع المدارس</h2><p>لإدارة أكثر تنظيمًا، ومتابعة أكثر دقة، ومدرسة أكثر تكاملًا.</p><Link href="/login">الدخول إلى المنصة</Link><p style={{marginTop:90,fontSize:12}}>نظام مدرسي مستقل، ولا يمثل منصة رسمية تابعة لوزارة التعليم.</p><small>جميع الحقوق محفوظة © الأستاذ سعيد سعدي القرني</small></main>}

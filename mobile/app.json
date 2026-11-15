@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "مَدَار",
+    "slug": "madar-school",
+    "scheme": "madar",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.example.madar"
+    },
+    "android": {
+      "package": "com.example.madar"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+      }
+    }
+  }
+}

@@ -61,7 +61,8 @@ export default function Dashboard() {
       <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 14}}>
         {modules.map(m => <section key={m} style={{padding: 22, background: 'white', borderRadius: 14, color: t.primary}}><h3>{m}</h3><small>قيد التطوير</small></section>)}
       </div>
-      <Link href="/admin" style={{display: 'block', marginTop: 24, padding: 16, textAlign: 'center', background: t.primary, color: 'white', borderRadius: 14, textDecoration: 'none', fontWeight: 700}}>قسم الإدارة</Link>
+      <Link href="/classes" style={{display: 'block', marginTop: 24, padding: 16, textAlign: 'center', background: 'white', color: t.primary, border: `1.5px solid ${t.primary}`, borderRadius: 14, textDecoration: 'none', fontWeight: 700}}>الفصول والطلاب</Link>
+      <Link href="/admin" style={{display: 'block', marginTop: 12, padding: 16, textAlign: 'center', background: t.primary, color: 'white', borderRadius: 14, textDecoration: 'none', fontWeight: 700}}>قسم الإدارة</Link>
       <button style={{marginTop: 28}} onClick={async () => { await supabase().auth.signOut(); router.replace('/login'); }}>تسجيل الخروج</button>
     </main>
   );

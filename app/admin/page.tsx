@@ -4,6 +4,7 @@ import {useRouter} from 'next/navigation';
 import Link from 'next/link';
 import {supabase} from '../../lib/supabase';
 import {DEFAULT_ADMIN_PIN, checkPin, changePin, isDefaultPin} from '../../lib/admin-pin';
+import {themeFor} from '../../lib/theme';
 
 const navy = '#173f68';
 const card: React.CSSProperties = {background: 'white', borderRadius: 18, boxShadow: '0 4px 14px rgba(23,63,104,0.07)', overflow: 'hidden'};
@@ -66,17 +67,18 @@ export default function Admin() {
     </main>
   );
 
+  const t = themeFor(profile?.schools?.school_type as 'boys' | 'girls' | null);
   const typeLabel = profile?.schools?.school_type === 'girls' ? 'بنات' : profile?.schools?.school_type === 'boys' ? 'بنين' : '';
   return (
     <main style={{maxWidth: 520, margin: 'auto', padding: 20}}>
-      <div style={{background: navy, color: 'white', borderRadius: 24, padding: 20, display: 'flex', flexDirection: 'column', gap: 8}}>
+      <div style={{background: t.primary, color: 'white', borderRadius: 24, padding: 20, display: 'flex', flexDirection: 'column', gap: 8}}>
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12}}>
           <h1 style={{margin: 0, fontSize: 26}}>قسم الإدارة</h1>
           <button type="button" onClick={() => { setUnlocked(false); setPin(''); }} style={{height: 44, padding: '0 14px', border: 0, borderRadius: 12, background: 'rgba(255,255,255,0.14)', color: 'white', fontFamily: 'inherit', fontWeight: 700, cursor: 'pointer'}}>قفل</button>
         </div>
         <div style={{display: 'flex', justifyContent: 'space-between', gap: 10}}>
           <span style={{fontSize: 18, fontWeight: 700}}>{profile?.schools?.name || 'مدرستك'}</span>
-          {typeLabel && <span style={{padding: '4px 12px', borderRadius: 999, background: '#8bd3d0', color: '#0f2c49', fontSize: 13, fontWeight: 700}}>{typeLabel}</span>}
+          {typeLabel && <span style={{padding: '4px 12px', borderRadius: 999, background: t.accent, color: t.primaryDark, fontSize: 13, fontWeight: 700}}>{typeLabel}</span>}
         </div>
       </div>
 

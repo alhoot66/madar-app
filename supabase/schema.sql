@@ -29,3 +29,5 @@ create policy profile_self_read on public.profiles for select to authenticated u
 create policy school_member_read on public.schools for select to authenticated using(id=(select public.my_school_id()));
 -- Other tables intentionally deny access until per-role policies and tests are completed.
 -- No school-specific seed: general edition starts empty.
+
+-- Run supabase/migrations/002_register_school.sql after this file to enable in-app school registration.

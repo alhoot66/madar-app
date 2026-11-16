@@ -18,8 +18,8 @@ export function useSchool(): {ready: boolean; profile: SchoolProfile | null; the
         const db = supabase();
         const {data: {user}} = await db.auth.getUser();
         if (!user) { router.replace('/login'); return; }
-        const {data, error} = await db.from('profiles').select('role,school_id,schools(name,school_type)').eq('user_id', user.id).single();
-        if (error || !data) { router.replace('/dashboard'); return; }
+        const {data, error} = await db.from('profiles').select('role,school_id,active,schools(name,school_type)').eq('user_id', user.id).single();
+        if (error || !data || data.active === false) { router.replace('/dashboard'); return; }
         if (active) { setProfile(data as unknown as SchoolProfile); setReady(true); }
       } catch { router.replace('/login'); }
     })();

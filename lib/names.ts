@@ -8,7 +8,7 @@ const LETTERS = /[\p{L}]/u;
 const HEADER = /^(اسم|الاسم|اسم الطالب|اسم الطالبة|الطالب|الطالبة|م|رقم|رقم الهوية|السجل المدني|الفصل|الصف|name|student)( |$)/i;
 
 function cleanCell(cell: string): string {
-  return cell.replace(/^[\s\d\-.)٠-٩]+/, '').replace(/\s+/g, ' ').trim();
+  return cell.replace(/^[\s\d\-.)٠-٩]+/, '').replace(/ـ/g, '').replace(/\s+/g, ' ').trim();
 }
 
 export function parseNames(text: string): string[] {
@@ -29,7 +29,7 @@ export function normalize(name: string): string {
     .replace(/[أإآ]/g, 'ا')
     .replace(/ى/g, 'ي')
     .replace(/ة/g, 'ه')
-    .replace(/[ً-ْ]/g, '')
+    .replace(/[ً-ْـ]/g, '') // التشكيل والتطويل
     .replace(/\s+/g, ' ')
     .trim();
 }

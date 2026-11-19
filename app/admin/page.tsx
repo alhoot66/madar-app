@@ -3,7 +3,7 @@ import {useEffect, useState} from 'react';
 import {useRouter} from 'next/navigation';
 import Link from 'next/link';
 import {supabase} from '../../lib/supabase';
-import {DEFAULT_ADMIN_PIN, checkPin, changePin, isDefaultPin} from '../../lib/admin-pin';
+import {DEFAULT_ADMIN_PIN, checkPin, changePin, isDefaultPin, markUnlocked, isUnlocked, lockAdmin} from '../../lib/admin-pin';
 import {themeFor} from '../../lib/theme';
 
 const navy = '#173f68';
@@ -30,7 +30,7 @@ export default function Admin() {
         const {data: {user}} = await db.auth.getUser();
         if (!user) { router.replace('/login'); return; }
         const {data} = await db.from('profiles').select('role,full_name,schools(name,school_type)').eq('user_id', user.id).single();
-        if (active) { setProfile((data as unknown as Profile) ?? null); setUsingDefault(isDefaultPin()); setReady(true); }
+        if (active) { setProfile((data as unknown as Profile) ?? null); setUsingDefault(isDefaultPin()); setUnlocked(isUnlocked()); setReady(true); }
       } catch { router.replace('/login'); }
     })();
     return () => { active = false; };
@@ -41,7 +41,7 @@ export default function Admin() {
     const next = pin + d;
     setPin(next); setError('');
     if (next.length === 4) {
-      if (await checkPin(next)) setUnlocked(true);
+      if (await checkPin(next)) { markUnlocked(); setUnlocked(true); }
       else { setError('الرقم السري غير صحيح'); setPin(''); }
     }
   }
@@ -74,7 +74,7 @@ export default function Admin() {
       <div style={{background: t.primary, color: 'white', borderRadius: 24, padding: 20, display: 'flex', flexDirection: 'column', gap: 8}}>
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12}}>
           <h1 style={{margin: 0, fontSize: 26}}>قسم الإدارة</h1>
-          <button type="button" onClick={() => { setUnlocked(false); setPin(''); }} style={{height: 44, padding: '0 14px', border: 0, borderRadius: 12, background: 'rgba(255,255,255,0.14)', color: 'white', fontFamily: 'inherit', fontWeight: 700, cursor: 'pointer'}}>قفل</button>
+          <button type="button" onClick={() => { lockAdmin(); setUnlocked(false); setPin(''); }} style={{height: 44, padding: '0 14px', border: 0, borderRadius: 12, background: 'rgba(255,255,255,0.14)', color: 'white', fontFamily: 'inherit', fontWeight: 700, cursor: 'pointer'}}>قفل</button>
         </div>
         <div style={{display: 'flex', justifyContent: 'space-between', gap: 10}}>
           <span style={{fontSize: 18, fontWeight: 700}}>{profile?.schools?.name || 'مدرستك'}</span>
@@ -83,10 +83,14 @@ export default function Admin() {
       </div>
 
       <h2 style={{fontSize: 15, color: '#4a6072', margin: '22px 4px 8px'}}>المدرسة</h2>
-      <div style={card}>
-        <div style={row}><b>بيانات المدرسة</b><small style={{color: '#4a6072'}}>الاسم، المدير، الجوال، البريد — قيد التطوير</small></div>
-        <div style={{...row, borderBottom: 0}}><b>المعلمون</b><small style={{color: '#4a6072'}}>إضافة المعلمين وإدارة حساباتهم — قيد التطوير</small></div>
-      </div>
+      {profile?.role === 'admin' ? (
+        <div style={card}>
+          <Link href="/admin/school" style={{...row, textDecoration: 'none', color: t.primary}}><b>بيانات المدرسة</b><small style={{color: '#4a6072'}}>الاسم، المدير، الجوال، البريد، نوع المدرسة</small></Link>
+          <Link href="/admin/teachers" style={{...row, borderBottom: 0, textDecoration: 'none', color: t.primary}}><b>المعلمون</b><small style={{color: '#4a6072'}}>إضافة المعلمين بالدعوة، وإيقاف الحسابات</small></Link>
+        </div>
+      ) : (
+        <p style={{...card, padding: 16, margin: 0, color: '#4a6072'}}>تعديل بيانات المدرسة وإدارة المعلمين متاحة لحساب المدير فقط.</p>
+      )}
 
       <h2 style={{fontSize: 15, color: '#4a6072', margin: '22px 4px 8px'}}>الحماية</h2>
       <ChangePin onChanged={() => setUsingDefault(false)} usingDefault={usingDefault}/>

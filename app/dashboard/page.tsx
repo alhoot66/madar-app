@@ -6,7 +6,7 @@ import {supabase} from '../../lib/supabase';
 import {themeFor} from '../../lib/theme';
 
 const modules = ['المتابعة الإدارية', 'الطلاب والسلوك والمواظبة', 'الدرجات والكشوف', 'الإدارة الصفية', 'الاعتمادات والتوقيعات', 'التقارير والطباعة'];
-type Profile = {role: string; school_id: string; schools: {name: string; school_type: string | null} | null};
+type Profile = {role: string; school_id: string; active: boolean; schools: {name: string; school_type: string | null} | null};
 
 // إذا سجّل المدير مدرسته وكان التفعيل بالبريد مطلوبًا، نكمل التسجيل عند أول دخول.
 async function finishPendingRegistration(): Promise<boolean> {
@@ -21,6 +21,16 @@ async function finishPendingRegistration(): Promise<boolean> {
   return true;
 }
 
+// إذا انضم المعلم برمز دعوة وكان التفعيل بالبريد مطلوبًا، نكمل الانضمام عند أول دخول.
+async function finishPendingJoin(): Promise<boolean> {
+  let code: string | null = null;
+  try { code = localStorage.getItem('madar_pending_join'); } catch {}
+  if (!code) return false;
+  const {error} = await supabase().rpc('join_school', {p_code: code});
+  try { localStorage.removeItem('madar_pending_join'); } catch {}
+  return !error;
+}
+
 export default function Dashboard() {
   const [ready, setReady] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -33,9 +43,9 @@ export default function Dashboard() {
         const db = supabase();
         const {data: {user}} = await db.auth.getUser();
         if (!user) { router.replace('/login'); return; }
-        const load = () => db.from('profiles').select('role,school_id,schools(name,school_type)').eq('user_id', user.id).single();
+        const load = () => db.from('profiles').select('role,school_id,active,schools(name,school_type)').eq('user_id', user.id).single();
         let {data, error} = await load();
-        if ((error || !data) && await finishPendingRegistration()) ({data, error} = await load());
+        if ((error || !data) && (await finishPendingRegistration() || await finishPendingJoin())) ({data, error} = await load());
         if (error || !data) { router.replace('/register'); return; }
         if (active) { setProfile(data as unknown as Profile); setReady(true); }
       } catch { router.replace('/login'); }
@@ -44,6 +54,13 @@ export default function Dashboard() {
   }, [router]);
 
   if (!ready) return <main style={{padding: 28}}>جارٍ التحقق من صلاحيات الدخول...</main>;
+  if (profile && profile.active === false) return (
+    <main style={{maxWidth: 420, margin: '10vh auto', padding: 28, background: 'white', borderRadius: 18, textAlign: 'center'}}>
+      <h1 style={{marginTop: 0}}>الحساب موقوف</h1>
+      <p>أوقفت إدارة المدرسة هذا الحساب. تواصل مع المدير لإعادة تفعيله.</p>
+      <button onClick={async () => { await supabase().auth.signOut(); router.replace('/login'); }}>تسجيل الخروج</button>
+    </main>
+  );
   const t = themeFor(profile?.schools?.school_type as 'boys' | 'girls' | null);
   const girls = profile?.schools?.school_type === 'girls';
   const roleLabel = profile?.role === 'admin' ? (girls ? 'المديرة' : 'المدير') : profile?.role === 'deputy' ? (girls ? 'الوكيلة' : 'الوكيل') : (girls ? 'المعلمة' : 'المعلم');
@@ -61,7 +78,8 @@ export default function Dashboard() {
       <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 14}}>
         {modules.map(m => <section key={m} style={{padding: 22, background: 'white', borderRadius: 14, color: t.primary}}><h3>{m}</h3><small>قيد التطوير</small></section>)}
       </div>
-      <Link href="/admin" style={{display: 'block', marginTop: 24, padding: 16, textAlign: 'center', background: t.primary, color: 'white', borderRadius: 14, textDecoration: 'none', fontWeight: 700}}>قسم الإدارة</Link>
+      <Link href="/classes" style={{display: 'block', marginTop: 24, padding: 16, textAlign: 'center', background: 'white', color: t.primary, border: `1.5px solid ${t.primary}`, borderRadius: 14, textDecoration: 'none', fontWeight: 700}}>الفصول والطلاب</Link>
+      <Link href="/admin" style={{display: 'block', marginTop: 12, padding: 16, textAlign: 'center', background: t.primary, color: 'white', borderRadius: 14, textDecoration: 'none', fontWeight: 700}}>قسم الإدارة</Link>
       <button style={{marginTop: 28}} onClick={async () => { await supabase().auth.signOut(); router.replace('/login'); }}>تسجيل الخروج</button>
     </main>
   );

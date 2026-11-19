@@ -32,3 +32,10 @@ export async function changePin(current: string, next: string): Promise<string |
   try { localStorage.setItem(STORAGE_KEY, await hash(next)); } catch { return 'تعذر حفظ الرقم السري على هذا الجهاز'; }
   return null;
 }
+
+// بعد إدخال الرقم السري يبقى قسم الإدارة مفتوحًا في هذه النافذة فقط حتى يُقفل أو تُغلق النافذة،
+// حتى تعمل صفحات الإدارة الفرعية (بيانات المدرسة، المعلمون) دون إعادة إدخال الرقم.
+const SESSION_KEY = 'madar_admin_unlocked';
+export function markUnlocked(): void { try { sessionStorage.setItem(SESSION_KEY, '1'); } catch {} }
+export function isUnlocked(): boolean { try { return sessionStorage.getItem(SESSION_KEY) === '1'; } catch { return false; } }
+export function lockAdmin(): void { try { sessionStorage.removeItem(SESSION_KEY); } catch {} }

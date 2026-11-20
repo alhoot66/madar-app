@@ -131,17 +131,13 @@ MADAR’s planned cloud infrastructure aims to support:
 
 📱 9. Cross-Platform Accessibility
 
-MADAR is being developed with a responsive, mobile-first approach.
+MADAR provides two ways to use the platform:
 
-Target platforms include:
+* Android and iOS/iPadOS: a native mobile client built with Expo.
+* Windows, macOS, and Linux: the installable Next.js PWA, accessed through a supported browser over HTTPS.
+* Modern web browsers, including Safari, Chrome, and Edge.
 
-* iPhone and iPad.
-* Android smartphones and tablets.
-* Windows computers.
-* macOS computers.
-* Modern web browsers, including Safari and Chrome.
-* Progressive Web App (PWA) installation.
-* Future distribution through the Apple App Store and Google Play.
+The desktop experience is a browser-installed PWA, not a separate Windows, macOS, or Linux installer. PWA installation and offline behavior vary by browser; private school data is not cached for offline use. Store distribution for the mobile apps requires production EAS configuration, developer accounts, and review.
 
 🏗️ Technology Stack
 
@@ -151,7 +147,7 @@ The project uses a modern web development stack built around:
 * React — Component-based user interface.
 * TypeScript — Type-safe application development.
 * Supabase — Cloud database and authentication integration architecture.
-* PWA Technology — Planned installable web application experience.
+* PWA Technology — Installable web application with a manifest and service worker.
 
 🌍 Designed for Schools of All Sizes
 

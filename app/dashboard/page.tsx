@@ -22,13 +22,14 @@ async function finishPendingRegistration(): Promise<boolean> {
 }
 
 // إذا انضم المعلم برمز دعوة وكان التفعيل بالبريد مطلوبًا، نكمل الانضمام عند أول دخول.
-async function finishPendingJoin(): Promise<boolean> {
+// يعيد: null إن لم توجد دعوة معلّقة، أو '' عند النجاح، أو رسالة الخطأ عند الفشل.
+async function finishPendingJoin(): Promise<string | null> {
   let code: string | null = null;
   try { code = localStorage.getItem('madar_pending_join'); } catch {}
-  if (!code) return false;
+  if (!code) return null;
   const {error} = await supabase().rpc('join_school', {p_code: code});
   try { localStorage.removeItem('madar_pending_join'); } catch {}
-  return !error;
+  return error ? (error.message || 'تعذر الانضمام') : '';
 }
 
 export default function Dashboard() {
@@ -45,7 +46,13 @@ export default function Dashboard() {
         if (!user) { router.replace('/login'); return; }
         const load = () => db.from('profiles').select('role,school_id,active,schools(name,school_type)').eq('user_id', user.id).single();
         let {data, error} = await load();
-        if ((error || !data) && (await finishPendingRegistration() || await finishPendingJoin())) ({data, error} = await load());
+        if ((error || !data) && await finishPendingRegistration()) ({data, error} = await load());
+        if (error || !data) {
+          const joinResult = await finishPendingJoin();
+          if (joinResult === '') ({data, error} = await load());
+          // فشل الانضمام بالرمز: نعيد المعلم إلى صفحة الانضمام مع السبب، لا إلى تسجيل مدرسة جديدة.
+          else if (joinResult !== null) { router.replace(`/join?error=${encodeURIComponent(joinResult)}`); return; }
+        }
         if (error || !data) { router.replace('/register'); return; }
         if (active) { setProfile(data as unknown as Profile); setReady(true); }
       } catch { router.replace('/login'); }

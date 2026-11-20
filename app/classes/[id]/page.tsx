@@ -1,6 +1,6 @@
 'use client';
 import {useEffect, useMemo, useState} from 'react';
-import {useParams} from 'next/navigation';
+import {useParams, useRouter} from 'next/navigation';
 import Link from 'next/link';
 import {supabase} from '../../../lib/supabase';
 import {useSchool} from '../../../lib/useSchool';
@@ -10,7 +10,10 @@ type Student = {id: string; full_name: string};
 
 export default function ClassStudents() {
   const {id} = useParams<{id: string}>();
+  const router = useRouter();
   const {ready, profile, theme: t} = useSchool();
+  const canManage = profile?.role === 'admin' || profile?.role === 'deputy';
+  const [editingName, setEditingName] = useState<string | null>(null);
   const [className, setClassName] = useState('');
   const [students, setStudents] = useState<Student[]>([]);
   const [text, setText] = useState('');
@@ -37,15 +40,44 @@ export default function ClassStudents() {
     if (!profile || fresh.length === 0) return;
     setBusy(true); setError(''); setMsg('');
     const rows = fresh.map(full_name => ({school_id: profile.school_id, class_id: id, full_name}));
-    const {error} = await supabase().from('students').insert(rows);
+    // إذا أُضيف الاسم نفسه من جهاز آخر في اللحظة نفسها، نتجاهله بدل إفشال القائمة كلها.
+    const {data, error} = await supabase().from('students')
+      .upsert(rows, {onConflict: 'class_id,full_name', ignoreDuplicates: true})
+      .select('id');
     setBusy(false);
     if (error) { setError('تعذر حفظ الطلاب. حاول مرة أخرى.'); return; }
-    setMsg(`تمت إضافة ${fresh.length} طالب`);
+    const added = data?.length ?? fresh.length;
+    const skipped = fresh.length - added;
+    setMsg(`تمت إضافة ${added} طالب` + (skipped > 0 ? ` (${skipped} موجود من قبل)` : ''));
     setText('');
     load();
   }
 
+  async function removeStudent(s: Student) {
+    if (!confirm(`حذف الطالب ${s.full_name} من الفصل؟`)) return;
+    setError(''); setMsg('');
+    const {error} = await supabase().from('students').delete().eq('id', s.id);
+    if (error) setError('تعذر حذف الطالب. قد تكون له درجات أو سجلات مرتبطة.'); else load();
+  }
+
+  async function renameClass(e: React.FormEvent) {
+    e.preventDefault();
+    const n = (editingName ?? '').trim();
+    if (!n) return;
+    setError(''); setMsg('');
+    const {error} = await supabase().from('classes').update({name: n}).eq('id', id);
+    if (error) setError('تعذر تعديل اسم الفصل'); else { setEditingName(null); load(); }
+  }
+
+  async function removeClass() {
+    if (students.length > 0) { setError('احذف طلاب الفصل أولًا، ثم احذف الفصل.'); return; }
+    if (!confirm(`حذف فصل ${className}؟`)) return;
+    const {error} = await supabase().from('classes').delete().eq('id', id);
+    if (error) setError('تعذر حذف الفصل'); else router.replace('/classes');
+  }
+
   if (!ready) return <main style={{padding: 28}}>جارٍ التحميل...</main>;
+  const smallBtn: React.CSSProperties = {minHeight: 36, padding: '0 12px', borderRadius: 10, border: '1px solid #d5dee7', background: 'white', fontFamily: 'inherit', fontWeight: 700, cursor: 'pointer'};
 
   return (
     <main style={{maxWidth: 620, margin: 'auto', padding: 20}}>
@@ -53,6 +85,19 @@ export default function ClassStudents() {
         <h1 style={{margin: 0}}>إضافة طلاب</h1>
         <p style={{margin: '6px 0 0'}}>إلى فصل: {className} — فيه الآن {students.length} طالب</p>
       </div>
+
+      {canManage && (editingName === null ? (
+        <div style={{display: 'flex', gap: 8, marginTop: 12}}>
+          <button type="button" onClick={() => setEditingName(className)} style={{...smallBtn, color: t.primary}}>تعديل اسم الفصل</button>
+          <button type="button" onClick={removeClass} style={{...smallBtn, color: '#a12222'}}>حذف الفصل</button>
+        </div>
+      ) : (
+        <form onSubmit={renameClass} style={{display: 'flex', gap: 8, marginTop: 12}}>
+          <input required value={editingName} onChange={e => setEditingName(e.target.value)} style={{flex: 1, padding: 10, borderRadius: 10, border: '1px solid #b9cbd8', fontFamily: 'inherit', fontSize: 16}}/>
+          <button style={{...smallBtn, background: t.primary, color: 'white', border: 0}}>حفظ</button>
+          <button type="button" onClick={() => setEditingName(null)} style={smallBtn}>إلغاء</button>
+        </form>
+      ))}
 
       <div style={{marginTop: 18, display: 'grid', gap: 10}}>
         <label htmlFor="names" style={{fontWeight: 700}}>الصق أسماء الطلاب، اسم في كل سطر</label>
@@ -77,7 +122,14 @@ export default function ClassStudents() {
       {students.length > 0 && (
         <details style={{marginTop: 20, background: 'white', borderRadius: 16, padding: '14px 16px'}}>
           <summary>طلاب الفصل ({students.length})</summary>
-          <ol>{students.map(s => <li key={s.id}>{s.full_name}</li>)}</ol>
+          <ol style={{paddingInlineStart: 22}}>{students.map(s => (
+            <li key={s.id} style={{padding: '4px 0'}}>
+              <span style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8}}>
+                {s.full_name}
+                {canManage && <button type="button" onClick={() => removeStudent(s)} aria-label={`حذف ${s.full_name}`} style={{...smallBtn, minHeight: 32, color: '#a12222'}}>حذف</button>}
+              </span>
+            </li>
+          ))}</ol>
         </details>
       )}
 

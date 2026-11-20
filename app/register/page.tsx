@@ -78,6 +78,7 @@ export default function Register() {
         {info && <p role="status" style={{margin: 0}}>{info}</p>}
       </form>
       <p style={{textAlign: 'center'}}>لديك حساب؟ <Link href="/login">تسجيل الدخول</Link></p>
+      <p style={{textAlign: 'center'}}>معلم أو وكيل وصلك رمز دعوة؟ <Link href="/join">انضم إلى مدرستك</Link></p>
     </main>
   );
 }

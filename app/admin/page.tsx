@@ -86,7 +86,8 @@ export default function Admin() {
       {profile?.role === 'admin' ? (
         <div style={card}>
           <Link href="/admin/school" style={{...row, textDecoration: 'none', color: t.primary}}><b>بيانات المدرسة</b><small style={{color: '#4a6072'}}>الاسم، المدير، الجوال، البريد، نوع المدرسة</small></Link>
-          <Link href="/admin/teachers" style={{...row, borderBottom: 0, textDecoration: 'none', color: t.primary}}><b>المعلمون</b><small style={{color: '#4a6072'}}>إضافة المعلمين بالدعوة، وإيقاف الحسابات</small></Link>
+          <Link href="/admin/teachers" style={{...row, textDecoration: 'none', color: t.primary}}><b>المعلمون</b><small style={{color: '#4a6072'}}>إضافة المعلمين بالدعوة، وإيقاف الحسابات</small></Link>
+          <Link href="/admin/assignments" style={{...row, borderBottom: 0, textDecoration: 'none', color: t.primary}}><b>توزيع الفصول والمواد</b><small style={{color: '#4a6072'}}>المواد، وإسناد كل معلم إلى فصوله ومواده</small></Link>
         </div>
       ) : (
         <p style={{...card, padding: 16, margin: 0, color: '#4a6072'}}>تعديل بيانات المدرسة وإدارة المعلمين متاحة لحساب المدير فقط.</p>

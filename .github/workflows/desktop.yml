@@ -34,8 +34,14 @@ jobs:
         shell: bash
         run: |
           if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then
-            echo "::error::أضف NEXT_PUBLIC_SUPABASE_URL و NEXT_PUBLIC_SUPABASE_ANON_KEY في Settings > Secrets and variables > Actions"
-            exit 1
+            msg="أضف NEXT_PUBLIC_SUPABASE_URL و NEXT_PUBLIC_SUPABASE_ANON_KEY في Settings > Secrets and variables > Actions"
+            if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+              echo "::error::$msg"
+              exit 1
+            fi
+            echo "::warning::$msg"
+            echo "NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co" >> "$GITHUB_ENV"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder-anon-key" >> "$GITHUB_ENV"
           fi
 
       - uses: actions/setup-node@v4

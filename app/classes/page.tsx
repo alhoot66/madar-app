@@ -57,7 +57,7 @@ export default function Classes() {
       <div style={{display: 'grid', gap: 10, marginTop: 18}}>
         {classes.length === 0 && <p style={{color: '#4a6072'}}>{canManage ? 'لا توجد فصول بعد. أضف أول فصل من الأسفل.' : `لم تُسند ${girls ? 'إليكِ' : 'إليك'} فصول بعد. اطلب من إدارة المدرسة إسناد فصولك وموادك.`}</p>}
         {classes.map(c => (
-          <Link key={c.id} href={`/classes/${c.id}`} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 18px', minHeight: 56, boxSizing: 'border-box', background: 'white', borderRadius: 16, boxShadow: '0 4px 14px rgba(23,63,104,0.07)', color: t.primary, textDecoration: 'none'}}>
+          <Link key={c.id} href={`/classes/view?id=${encodeURIComponent(c.id)}`} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 18px', minHeight: 56, boxSizing: 'border-box', background: 'white', borderRadius: 16, boxShadow: '0 4px 14px rgba(23,63,104,0.07)', color: t.primary, textDecoration: 'none'}}>
             <span><b>{c.name}</b><br/><small style={{color: '#4a6072'}}>{c.stage}{mySubjects[c.id]?.length ? ` — ${mySubjects[c.id].join('، ')}` : ''}</small></span>
             <span aria-hidden="true">‹</span>
           </Link>

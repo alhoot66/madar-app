@@ -1,6 +1,6 @@
 'use client';
-import {useEffect, useMemo, useState} from 'react';
-import {useParams, useRouter} from 'next/navigation';
+import {Suspense, useEffect, useMemo, useState} from 'react';
+import {useRouter, useSearchParams} from 'next/navigation';
 import Link from 'next/link';
 import {supabase} from '../../../lib/supabase';
 import {useSchool} from '../../../lib/useSchool';
@@ -8,8 +8,13 @@ import {parseNames, splitNew} from '../../../lib/names';
 
 type Student = {id: string; full_name: string};
 
-export default function ClassStudents() {
-  const {id} = useParams<{id: string}>();
+// صفحة الفصل: /classes/view?id=... (مسار ثابت حتى تعمل نسخة سطح المكتب بدون خادم)
+export default function ClassStudentsPage() {
+  return <Suspense fallback={null}><ClassStudents /></Suspense>;
+}
+
+function ClassStudents() {
+  const id = useSearchParams().get('id') ?? '';
   const router = useRouter();
   const {ready, profile, theme: t} = useSchool();
   const canManage = profile?.role === 'admin' || profile?.role === 'deputy';
@@ -32,7 +37,7 @@ export default function ClassStudents() {
     setClassName(c.data.name);
     setStudents(s.data ?? []);
   }
-  useEffect(() => { if (ready) load(); }, [ready, id]);
+  useEffect(() => { if (ready && id) load(); }, [ready, id]);
 
   const {fresh, dupes} = useMemo(() => splitNew(parseNames(text), students.map(s => s.full_name)), [text, students]);
 

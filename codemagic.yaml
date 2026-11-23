@@ -1,0 +1,88 @@
+# بناء تطبيق الجوال (mobile/) على Codemagic — بدون جهاز ماك.
+# قبل التشغيل: في Codemagic ← Teams ← Global variables and secrets أنشئ مجموعة اسمها supabase
+# وأضف فيها EXPO_PUBLIC_SUPABASE_URL و EXPO_PUBLIC_SUPABASE_ANON_KEY (المفتاح العام anon فقط، لا service_role).
+
+definitions:
+  env: &env
+    groups:
+      - supabase
+    node: 22
+    java: 17
+    xcode: latest
+    cocoapods: default
+  install: &install
+    name: تثبيت المكتبات
+    script: cd mobile && npm ci
+
+workflows:
+  # 1) نسخة أندرويد APK تُثبَّت مباشرة على الجوال. لا تحتاج أي حساب مطور.
+  android-apk:
+    name: مدار — Android APK
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment: *env
+    scripts:
+      - *install
+      - name: إنشاء مشروع أندرويد
+        script: cd mobile && npx expo prebuild --platform android --no-install
+      - name: بناء APK
+        script: cd mobile/android && ./gradlew assembleRelease
+    artifacts:
+      - mobile/android/app/build/outputs/apk/release/*.apk
+
+  # 2) نسخة للمحاكي فقط (للتأكد أن مشروع iOS يُبنى). لا تحتاج حساب Apple، لكنها لا تعمل على جوال حقيقي.
+  ios-simulator:
+    name: مدار — iOS Simulator
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment: *env
+    scripts:
+      - *install
+      - name: إنشاء مشروع iOS
+        script: cd mobile && npx expo prebuild --platform ios
+      - name: بناء للمحاكي
+        script: |
+          cd mobile/ios
+          WS=$(ls -d *.xcworkspace | head -1)
+          xcodebuild -workspace "$WS" -scheme "$(basename "$WS" .xcworkspace)" \
+            -configuration Release -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+          cd build/Build/Products/Release-iphonesimulator && zip -qr "$CM_BUILD_DIR/madar-simulator.zip" *.app
+    artifacts:
+      - madar-simulator.zip
+
+  # 3) نسخة iPhone حقيقية تُرفع إلى TestFlight. تحتاج حساب Apple Developer (99$ سنويًا)
+  #    وربط App Store Connect في Codemagic باسم madar_asc، وتسجيل التطبيق بالمعرّف أدناه.
+  ios-testflight:
+    name: مدار — iOS TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: madar_asc
+    environment:
+      <<: *env
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.alhoot66.madar
+    scripts:
+      - *install
+      - name: إنشاء مشروع iOS
+        script: cd mobile && npx expo prebuild --platform ios
+      - name: رقم البناء
+        script: |
+          PLIST=$(ls mobile/ios/*/Info.plist | head -1)
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$PLIST"
+      - name: تفعيل شهادات التوقيع
+        script: xcode-project use-profiles
+      - name: بناء IPA
+        script: |
+          cd mobile/ios
+          WS=$(ls -d *.xcworkspace | head -1)
+          xcode-project build-ipa --workspace "$WS" --scheme "$(basename "$WS" .xcworkspace)"
+    artifacts:
+      - mobile/ios/build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

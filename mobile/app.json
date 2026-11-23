@@ -8,10 +8,10 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.example.madar"
+      "bundleIdentifier": "com.alhoot66.madar"
     },
     "android": {
-      "package": "com.example.madar"
+      "package": "com.alhoot66.madar"
     },
     "extra": {
       "eas": {

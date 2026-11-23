@@ -40,3 +40,26 @@
 - النسخ غير موقّعة. في الماك يفتحها المستخدم أول مرة بالضغط بالزر الأيمن ← فتح. وفي ويندوز يظهر تنبيه SmartScreen فيختار «تشغيل على أي حال». التوقيع يحتاج حساب Apple Developer (99 دولار سنويًا) وشهادة توقيع لويندوز.
 - المعرّف في `src-tauri/tauri.conf.json` هو `com.alhoot66.madar`؛ غيّره قبل أي نشر رسمي لو تبغى معرّفًا آخر.
 - صفحة الفصل صار رابطها `/classes/view?id=…` بدل `/classes/<id>` حتى تشتغل بدون خادم.
+
+
+## بناء تطبيق الجوال على Codemagic (بدون ماك)
+
+الإعداد في `codemagic.yaml` بجذر المستودع، وفيه ثلاث عمليات بناء:
+
+| العملية | الناتج | يحتاج |
+|---|---|---|
+| `android-apk` | ملف APK يُثبَّت مباشرة على جوال أندرويد | لا شيء |
+| `ios-simulator` | نسخة للمحاكي فقط (للتأكد أن مشروع iOS سليم) | لا شيء |
+| `ios-testflight` | نسخة iPhone حقيقية على TestFlight | حساب Apple Developer |
+
+**الخطوات:**
+1. سجّل في codemagic.io بحساب GitHub، واضغط Add application ← اختر `madar-app` ← نوع المشروع React Native.
+2. Teams ← Global variables and secrets: أنشئ مجموعة اسمها `supabase` فيها `EXPO_PUBLIC_SUPABASE_URL` و`EXPO_PUBLIC_SUPABASE_ANON_KEY` (المفتاح العام فقط).
+3. اختر العملية من Start new build ← Workflow، ثم نزّل الملف من صفحة البناء بعد انتهائه.
+
+**لنسخة iPhone الحقيقية (TestFlight):**
+1. اشترك في Apple Developer Program.
+2. في App Store Connect أنشئ تطبيقًا بالمعرّف `com.alhoot66.madar`.
+3. في App Store Connect ← Users and Access ← Integrations أنشئ مفتاح API بصلاحية App Manager.
+4. في Codemagic ← Team integrations ← Developer Portal أضف المفتاح باسم `madar_asc`.
+5. شغّل `ios-testflight`، وبعد المعالجة يظهر التطبيق في تطبيق TestFlight على الآيفون.

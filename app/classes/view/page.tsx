@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {supabase} from '../../../lib/supabase';
 import {useSchool} from '../../../lib/useSchool';
 import {parseNames, splitNew} from '../../../lib/names';
+import {StudentComment} from './StudentComment';
 
 type Student = {id: string; full_name: string};
 
@@ -26,6 +27,7 @@ function ClassStudents() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [guide, setGuide] = useState(false);
+  const [commentFor, setCommentFor] = useState<Student | null>(null);
 
   async function load() {
     const db = supabase();
@@ -131,7 +133,10 @@ function ClassStudents() {
             <li key={s.id} style={{padding: '4px 0'}}>
               <span style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8}}>
                 {s.full_name}
-                {canManage && <button type="button" onClick={() => removeStudent(s)} aria-label={`حذف ${s.full_name}`} style={{...smallBtn, minHeight: 32, color: '#a12222'}}>حذف</button>}
+                <span style={{display: 'flex', gap: 6}}>
+                  <button type="button" onClick={() => setCommentFor(s)} aria-label={`كتابة ملاحظة عن ${s.full_name}`} style={{...smallBtn, minHeight: 32, color: t.primary}}>ملاحظة</button>
+                  {canManage && <button type="button" onClick={() => removeStudent(s)} aria-label={`حذف ${s.full_name}`} style={{...smallBtn, minHeight: 32, color: '#a12222'}}>حذف</button>}
+                </span>
               </span>
             </li>
           ))}</ol>
@@ -139,6 +144,8 @@ function ClassStudents() {
       )}
 
       <Link href="/classes" style={{display: 'block', marginTop: 20, textAlign: 'center', color: t.primary, fontWeight: 700}}>العودة إلى الفصول</Link>
+
+      {commentFor && <StudentComment student={commentFor} theme={t} onClose={() => setCommentFor(null)}/>}
 
       {guide && (
         <div role="dialog" aria-modal="true" aria-labelledby="guide-title" style={{position: 'fixed', inset: 0, background: 'rgba(15,44,73,0.45)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center'}}>

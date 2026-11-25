@@ -5,7 +5,7 @@ import {supabase} from './supabase';
 // الفصول ← الطلاب ← ملاحظة بمساعدة Claude.
 // المعلم يرى فصوله فقط (سياسات RLS في Supabase)، والمدير والوكيل يرون كل الفصول.
 // الطلب يذهب إلى دالة student-comment على Supabase، ومفتاح Claude لا يصل إلى الجوال.
-// اسم الطالب لا يُرسل إلى Claude.
+// اسم الطالب لا يُرسل إلى Claude، والدالة تحذفه من النقاط إن كتبه المعلم.
 
 type Row = {id: string; name: string};
 type Kind = 'report' | 'parent';
@@ -96,7 +96,7 @@ function StudentNote({student, onBack}: {student: Row; onBack: () => void}) {
       <Text style={s.label}>اكتب نقاطًا قصيرة عن الطالب</Text>
       <TextInput style={[s.input, {minHeight: 110}]} multiline maxLength={1200} value={notes} onChangeText={setNotes}
         placeholder="مثال: مشارك في الحصة، خطه جميل، يتأخر في تسليم الواجبات" textAlignVertical="top"/>
-      <Text style={s.hint}>يكتب Claude النص من نقاطك فقط. اسم الطالب لا يُرسل. راجع النص قبل استخدامه.</Text>
+      <Text style={s.hint}>لا تكتب أسماء ولا أرقام هوية أو جوال. إن كتبت اسم الطالب يُحذف تلقائيًا قبل الإرسال. راجع النص قبل استخدامه.</Text>
       <Pressable accessibilityRole="button" disabled={busy || !ready} onPress={generate} style={[s.button, !ready && {backgroundColor: '#9fb0c0'}]}>
         {busy ? <ActivityIndicator color="white"/> : <Text style={s.buttonText}>{text ? 'اكتب صياغة أخرى' : 'اكتب الملاحظة'}</Text>}
       </Pressable>

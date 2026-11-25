@@ -6,7 +6,7 @@ import type {Theme} from '../../../lib/theme';
 type Kind = 'report' | 'parent';
 
 // نافذة «اكتب ملاحظة بمساعدة Claude»: المعلم يكتب نقاطًا قصيرة، ويحصل على نص مرتب يعدّله وينسخه.
-// اسم الطالب لا يُرسل إلى Claude؛ الدالة على الخادم تتحقق من صلاحية المعلم على الطالب فقط.
+// اسم الطالب لا يُرسل إلى Claude، والدالة تحذفه من النقاط إن كتبه المعلم، وتتحقق من صلاحيته على الطالب.
 export function StudentComment({student, theme: t, onClose}: {student: {id: string; full_name: string}; theme: Theme; onClose: () => void}) {
   const [kind, setKind] = useState<Kind>('report');
   const [notes, setNotes] = useState('');
@@ -51,7 +51,7 @@ export function StudentComment({student, theme: t, onClose}: {student: {id: stri
         <label htmlFor="notes" style={{fontWeight: 700}}>اكتب نقاطًا قصيرة عن الطالب</label>
         <textarea id="notes" rows={4} maxLength={1200} value={notes} onChange={e => setNotes(e.target.value)} style={field}
           placeholder="مثال: مشارك في الحصة، خطه جميل، يتأخر في تسليم الواجبات، تحسن في الاختبار الأخير"/>
-        <p style={{margin: 0, padding: '8px 12px', borderRadius: 10, background: t.soft, fontSize: 13}}>يكتب Claude النص من نقاطك فقط. اسم الطالب لا يُرسل. راجع النص قبل استخدامه.</p>
+        <p style={{margin: 0, padding: '8px 12px', borderRadius: 10, background: t.soft, fontSize: 13}}>لا تكتب أسماء ولا أرقام هوية أو جوال. إن كتبت اسم الطالب يُحذف تلقائيًا قبل الإرسال. راجع النص قبل استخدامه.</p>
 
         <button type="button" onClick={generate} disabled={busy || notes.trim().length < 3}
           style={{height: 52, border: 0, borderRadius: 14, background: notes.trim().length >= 3 ? t.primary : '#9fb0c0', color: 'white', fontFamily: 'inherit', fontSize: 16, fontWeight: 700}}>
